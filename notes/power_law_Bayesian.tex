@@ -1,0 +1,139 @@
+\documentclass[a4paper, notitlepage, 10pt]{article}
+\usepackage{geometry}
+\fontfamily{times}
+\geometry{verbose,tmargin=30mm,bmargin=25mm,lmargin=25mm,rmargin=25mm}
+\pagestyle{empty}
+% end configs
+\usepackage{setspace,relsize}               
+\usepackage{moreverb}                        
+\usepackage{url}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,citecolor=blue}
+\usepackage{amsmath}
+\usepackage{mathtools} 
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{indentfirst}
+\usepackage{todonotes}
+\usepackage[authoryear,round]{natbib}
+\bibliographystyle{apalike}
+\usepackage[pdftex]{lscape}
+\usepackage[utf8]{inputenc}
+
+% Title Page
+\title{\vspace{-9ex}\centering \bf A Bayesian approach to power law analysis}
+\author{
+Luiz Max F. de Carvalho\\
+Program for Scientific Computing (PROCC), Oswaldo Cruz Foundation. \\
+% Institute of Evolutionary Biology, University of Edinburgh.\\
+}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newtheorem{theorem}{Theorem}[]
+\newtheorem{proposition}{Proposition}[]
+\newtheorem{remark}{Remark}[]
+\setcounter{theorem}{0} % assign desired value to theorem counter
+\begin{document}
+\maketitle
+
+% \begin{abstract}
+% 
+% Key-words: ;; ; ; . 
+% \end{abstract}
+
+\section{Ideas}
+Taking the method of~\cite{Clauset2009} as a basis:
+\begin{itemize}
+ \item Replace bootstrap p-value with posterior predictive p-value~\citep{Gabry2017} for assessing adequacy of power law: need an experiment showing comparable or better performance.
+ \item Replace likelihood ratio tests with Bayes factors: need experiment showing BFs are comparable or better than LR tests
+ \subitem Marginal likelihoods (MaL) are ``easy'' for power law and stretched exponential, need to figure out if log-normal can be done analytically.
+ Marginal likelihood for PL can be made more general by assuming a Gamma($a_\beta, b_\beta$) prior on $\beta$  -- need to talk about the induced density on $\alpha = \beta + 1$.
+ To recover the Jeffreys prior just set $a_\beta = b_\beta = 0$\footnote{Mathematically different,numerically the same. See \url{https://stats.stackexchange.com/a/111227/97431}}.
+ Need to check the results of MaL for stretched exponential: some discrepancy with bridge sampling results.
+ Should not there be any.
+ I think this can be tracked down to instability with \verb|lintegrate|.
+ 
+ \subitem Sketch of experiment to test BFs: simulate 100 (1000) data sets from a power law as in the simulated example in Clauset et al, 100 data sets from a log-normal with same mean and variance (aka moment-matching) and 100 data sets from a moment matching stretched exponential.
+ Then perform LR tests and BFs and count how many times each procedure picked the right model.
+ Notice this falls in the category of ``frequentist properties of Bayesian estimators''. 
+ But we are to have any hope of convincing physicists to switch approaches we will need to show that a Bayesian approach gets the answer right every time the frequentist one does and also in some situations where frequentism fails. 
+\end{itemize}
+
+\section{Some calculations}
+For the simplest power law model, the likelihood is
+  $$ f(x | \alpha, x_{\min}) = \frac{\alpha - 1}{x_{\min} } \left(\frac{x}{ x_{\min} }\right)^{-\alpha}. $$
+When a vector of observations $\boldsymbol x = \{ x_1, x_2, \ldots, x_N\}$ is available, the likelihood is
+  $$ f(\boldsymbol x | \alpha,  x_{\min}) =   \prod_{i= 1}^N f(x_i | \alpha, x_{\min}) = \left( \frac{\alpha - 1}{x_{\min} } \right)^N \left(\frac{ \prod_{i= 1}^N x_i}{ x_{\min}^N }\right)^{-\alpha}, $$
+under the assumption of independent and identically-distributed data.
+
+The Jeffreys prior~\citep{Jeffreys1946} for $\alpha$ is 
+$$ \pi_J(\alpha) \propto \frac{1}{\alpha - 1},$$
+and leads to a proper posterior distribution.
+Moreover, when $x_{\min}$ is assumed known, the marginal likelihood with respect to $\alpha$ can be computed analytically:
+\begin{align*}
+\mathcal{L}(x, x_{\min}) &= \int_{1}^\infty \frac{1}{(\alpha - 1)} \left( \frac{\alpha - 1}{x_{\min} } \right)^N \left(\frac{ \prod_{i= 1}^N x_i}{ x_{\min}^N }\right)^{-\alpha} d\alpha, \\
+%&= \int_{1}^\infty   x_{\min}^{N(\alpha-1)}\left( \alpha -1 \right)^{N-1} \left( \prod_{i= 1}^N x_i \right)^{-\alpha} d\alpha, \\
+%&= \int_{0}^\infty   x_{\min}^{N\beta} \beta^{N-1} \left( \prod_{i= 1}^N x_i \right)^{- (\beta + 1)} d\beta,\\
+&= \frac{1}{\prod_{i= 1}^N x_i}\int_{0}^\infty   \left(\frac{x_{\min}^N}{\prod_{i= 1}^N x_i }\right)^\beta \beta^{N-1} d\beta,\\
+&= \frac{1}{\prod_{i= 1}^N x_i} \frac{\Gamma(N)}{\left( -\log \left(\frac{x_{\min}^N}{\prod_{i= 1}^N x_i }\right) \right)^N}.
+\end{align*}
+
+Could also employ a Gamma($a_\beta$, $b_\beta$) on $\beta = \alpha - 1$ and the marginal likelihood would be:
+\begin{equation}
+\mathcal{L}(x, x_{\min} | a_\beta, b_\beta) = \frac{1}{\prod_{i= 1}^N x_i} \frac{\Gamma(N + a_\beta)}{\left( -\log \left(\frac{x_{\min}^N}{\prod_{i= 1}^N x_i }\right) + b_\beta \right)^{N + a_\beta}}.
+\end{equation}
+The problem with this approach is that the induced prior on the actual parameter of interest, $\alpha$, is a bit weird.
+
+\section{Log-normal}
+
+The likelihood is:
+\begin{align}
+ f(\boldsymbol x | \mu, \sigma, x_{\min}) &= \prod_{i = 1}^n f(x_i | \mu, \sigma, x_{\min}), \\
+ &= \left(\prod_{i = 1}^n x_i \right)^{-1} \left(\prod_{i = 1}^n x_i \right)^{\frac{\mu}{\sigma^2}} \left( \sqrt{\frac{2}{\pi\sigma^2}} \frac{1}{\text{erfc}\left( \frac{\log x_{\min} - \mu}{\sqrt{2}\sigma} \right)}\right)^n \exp\left( -\frac{n\mu^2}{2\sigma^2} \right) \exp\left(-\frac{1}{2\sigma^2}\sum_{i=1}^n (\log x_i)^2\right) 
+\end{align}
+
+Let us first integrate with respect to $\sigma$.
+For that we will make the substitution $\tau := 1/\sigma^2$ and place a Gamma($\alpha_s$, $\beta_s$) on $\tau$.
+Also let $ \boldsymbol p := \prod_{i = 1}^n x_i$ and $\boldsymbol S_2 := \sum_{i=1}^n (\log x_i)^2$.
+First, re-arrange the likelihood:
+
+\begin{align}
+  f(\boldsymbol x | \mu, \sigma, x_{\min}) &= \boldsymbol p^{-1} \boldsymbol p^{\tau\mu} \left( \sqrt{\frac{2\tau}{\pi}} \frac{1}{\text{erfc}\left( \frac{(\log x_{\min} - \mu)\sqrt{\tau} }{\sqrt{2}} \right)}\right)^n \exp\left( -\frac{n\mu^2\tau}{2} \right) \exp\left(-\frac{\tau}{2} \boldsymbol S_2 \right), \\
+&=  \left(\sqrt{\frac{2}{\pi}}\right)^n\boldsymbol p^{-1} \left( \boldsymbol p^{\mu} \exp\left(-\frac{n\mu^2 + \boldsymbol S_2}{2}\right)  \right)^\tau \tau^{n/2} \left( \frac{1}{\text{erfc}\left( \frac{(\log x_{\min} - \mu)\sqrt{\tau} }{\sqrt{2}} \right)}\right)^n
+\end{align}
+Seems like a dead-end. 
+Could try integration by parts with $u = 1/(\text{erfc}(c\sqrt{\tau}))^n$ and $dv = \exp(-A\tau) \tau^{n/2}$.
+Under the Jeffreys prior $\pi(\tau) \propto \tau$, $dv = \exp(-A\tau) \tau^{(n + 2)/2}$.
+The full plan for a semi-analytical solution here is: integrate one of the parameters out then marginalise over the one one through quadrature (see stretched exponential below).
+
+\section{Stretched exponential (Weibull)}
+The likelihood for a single point is
+$$ f(x | \lambda, \beta, x_{\min}) = \lambda\beta\exp\left(\lambda x_{\min}^\beta\right) x^{\beta-1} \exp\left(-\lambda x^\beta \right) $$
+The likelihood of a sample $\boldsymbol x$ is
+\begin{align}
+  f(\boldsymbol x | \mu, \sigma, x_{\min}) &= \prod_{i = 1}^N f(x_i | \lambda, \beta, x_{\min}), \\
+  &= \left(\lambda\beta\exp\left(\lambda x_{\min}^\beta\right)\right)^N \boldsymbol p^{\beta -1} \exp\left(-\lambda \sum_{i = 1}^N x_i^\beta \right).
+\end{align}
+If we then decide to employ Gamma priors for both parameters we get the posterior
+\begin{equation}
+ p(\lambda, \beta | \boldsymbol x) \propto \left(\lambda\beta\exp\left(\lambda x_{\min}^\beta\right)\right)^N \boldsymbol p^{\beta -1} \exp\left(-\lambda \sum_{i = 1}^N x_i^\beta \right) \frac{b_1^{a_1}}{\Gamma(a_1)}\beta^{a_1 - 1}\exp(-b_1\beta) \frac{b_2^{a_2}}{\Gamma(a_2)}\lambda^{a_2 - 1}\exp(-b_2\lambda)
+\end{equation}
+To compute the marginal likelihood we will first integrate the posterior with respect to $\lambda$.
+For that  we will collect only terms that depend on $\lambda$ and get
+\begin{align*}
+ p(\lambda | \boldsymbol x, \beta) &\propto \lambda^N \lambda^{a_2 -1} \exp\left(\lambda N x_{\min}^\beta\right)\exp\left(-\lambda \sum_{i = 1}^N x_i^\beta \right)\exp(-b_2\lambda), \\
+ &\propto \lambda^{N + a_2 -1} \exp\left(-\left[\sum_{i = 1}^N x_i^\beta - N x_{\min}^\beta + b_2\right] \lambda  \right),
+\end{align*}
+which is the kernel of a Gamma($N + a_2$, $\sum_{i = 1}^N x_i^\beta - N x_{\min}^\beta + b_2$) distribution, leading to
+\begin{align}
+  p(\beta | \boldsymbol x) &= \frac{b_1^{a_1}}{\Gamma(a_1)} \frac{b_2^{a_2}}{\Gamma(a_2)} \beta^{N + a_1 - 1} \boldsymbol p^{\beta -1} \exp(-b_1\beta)  \frac{\Gamma(N + a_2)}{\left[\sum_{i = 1}^N x_i^\beta  - Nx_{\min}^\beta + b_2\right]^{N + a_2}}, \\
+%   &= \frac{b_1^{a_1}}{\Gamma(a_1)} \frac{b_2^{a_2}}{\Gamma(a_2)} \boldsymbol p^{-1} \beta^{N + a_1 - 1}  \exp\left(-[b_1 - \sum_{i=1}^N \log(x_i)]\beta\right)\frac{\Gamma(N + a_2)}{\left[\sum_{i = 1}^N x_i^\beta - Nx_{\min}^\beta + b_2 \right]^{N + a_2}}.\\
+&= \frac{b_1^{a_1}}{\Gamma(a_1)} \frac{b_2^{a_2}}{\Gamma(a_2)}  \frac{\Gamma(N + a_2)}{\boldsymbol p } \frac{\beta^{N + a_1 - 1}  \exp\left(-[b_1 - \sum_{i=1}^N \log(x_i)]\beta\right)}{\left[\sum_{i = 1}^N x_i^\beta - Nx_{\min}^\beta + b_2 \right]^{N + a_2}}.
+\end{align}
+The integral $\int_0^\infty p(\beta | \boldsymbol x)d\beta$ is intractable but can be computed by numerically-stable quadrature.
+I have used the library \verb|lintegrate| (\url{https://github.com/mattpitkin/lintegrate}) to do the quadrature; while not rock solid it gets the job done.
+
+% \section*{Acknowledgements}
+\bibliography{b_plaw}
+
+\end{document}          
