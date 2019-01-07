@@ -56,10 +56,11 @@ Taking the method of~\cite{Clauset2009} as a basis:
  \subitem Sketch of experiment to test BFs: simulate 100 (1000) data sets from a power law as in the simulated example in Clauset et al, 100 data sets from a log-normal with same mean and variance (aka moment-matching) and 100 data sets from a moment matching stretched exponential.
  Then perform LR tests and BFs and count how many times each procedure picked the right model.
  Notice this falls in the category of ``frequentist properties of Bayesian estimators''. 
- But we are to have any hope of convincing physicists to switch approaches we will need to show that a Bayesian approach gets the answer right every time the frequentist one does and also in some situations where frequentism fails. 
+ But if we are to have any hope of convincing physicists to switch approaches we will need to show that a Bayesian approach gets the answer right every time the frequentist one does and also in some situations where frequentism fails. 
 \end{itemize}
 
 \section{Some calculations}
+
 For the simplest power law model, the likelihood is
   $$ f(x | \alpha, x_{\min}) = \frac{\alpha - 1}{x_{\min} } \left(\frac{x}{ x_{\min} }\right)^{-\alpha}. $$
 When a vector of observations $\boldsymbol x = \{ x_1, x_2, \ldots, x_N\}$ is available, the likelihood is
@@ -71,7 +72,7 @@ $$ \pi_J(\alpha) \propto \frac{1}{\alpha - 1},$$
 and leads to a proper posterior distribution.
 Moreover, when $x_{\min}$ is assumed known, the marginal likelihood with respect to $\alpha$ can be computed analytically:
 \begin{align*}
-\mathcal{L}(x, x_{\min}) &= \int_{1}^\infty \frac{1}{(\alpha - 1)} \left( \frac{\alpha - 1}{x_{\min} } \right)^N \left(\frac{ \prod_{i= 1}^N x_i}{ x_{\min}^N }\right)^{-\alpha} d\alpha, \\
+\mathcal{L}( \boldsymbol x | x_{\min}) &= \int_{1}^\infty \frac{1}{(\alpha - 1)} \left( \frac{\alpha - 1}{x_{\min} } \right)^N \left(\frac{ \prod_{i= 1}^N x_i}{ x_{\min}^N }\right)^{-\alpha} d\alpha, \\
 %&= \int_{1}^\infty   x_{\min}^{N(\alpha-1)}\left( \alpha -1 \right)^{N-1} \left( \prod_{i= 1}^N x_i \right)^{-\alpha} d\alpha, \\
 %&= \int_{0}^\infty   x_{\min}^{N\beta} \beta^{N-1} \left( \prod_{i= 1}^N x_i \right)^{- (\beta + 1)} d\beta,\\
 &= \frac{1}{\prod_{i= 1}^N x_i}\int_{0}^\infty   \left(\frac{x_{\min}^N}{\prod_{i= 1}^N x_i }\right)^\beta \beta^{N-1} d\beta,\\
@@ -80,10 +81,20 @@ Moreover, when $x_{\min}$ is assumed known, the marginal likelihood with respect
 
 Could also employ a Gamma($a_\beta$, $b_\beta$) on $\beta = \alpha - 1$ and the marginal likelihood would be:
 \begin{equation}
-\mathcal{L}(x, x_{\min} | a_\beta, b_\beta) = \frac{1}{\prod_{i= 1}^N x_i} \frac{\Gamma(N + a_\beta)}{\left( -\log \left(\frac{x_{\min}^N}{\prod_{i= 1}^N x_i }\right) + b_\beta \right)^{N + a_\beta}}.
+\mathcal{L}( \boldsymbol x |  x_{\min},  a_\beta, b_\beta) = \frac{1}{\prod_{i= 1}^N x_i} \frac{\Gamma(N + a_\beta)}{\left( -\log \left(\frac{x_{\min}^N}{\prod_{i= 1}^N x_i }\right) + b_\beta \right)^{N + a_\beta}}.
 \end{equation}
 The problem with this approach is that the induced prior on the actual parameter of interest, $\alpha$, is a bit weird.
 
+\textbf{Accommodating truncated priors}
+
+\cite{Gillespie2017} propose an uniform prior on $\alpha$ with bounds $l_\alpha = 3/2$ and $u_\alpha = 3$.
+In this situation we have
+\begin{align} 
+ \label{eq:truncated_alpha_MaL}
+  & \mathcal{L}( \boldsymbol x |  x_{\min},  l_\alpha, u_\alpha) = \int_{l_\alpha}^{u_\alpha} \frac{1}{(u_\alpha - l_\alpha)} \frac{1}{(\alpha - 1)} \left( \frac{\alpha - 1}{x_{\min} } \right)^N \left(\frac{ \prod_{i= 1}^N x_i}{ x_{\min}^N }\right)^{-\alpha} d\alpha, \\ %TODO: maybe remove this as redundant (just state 
+  &= \frac{\Gamma\left(N, -(l_\alpha - 1)\log(z) \right) - \Gamma\left(N, - (u_\alpha - 1) \log(z) \right) }{(u_\alpha - l_\alpha)\prod_{i= 1}^N x_i\left(-\log(z)\right)^N} , 
+  \end{align}
+for $ 1 \leq l_\alpha < u_\alpha$ with $z := \frac{x_{\min}^N}{\prod_{i= 1}^N x_i }$, where $\Gamma(s, x)$ is the incomplete Gamma function and $\Gamma(s) = \Gamma(s, 0)$.
 \section{Log-normal}
 
 The likelihood is:
@@ -104,9 +115,10 @@ First, re-arrange the likelihood:
 Seems like a dead-end. 
 Could try integration by parts with $u = 1/(\text{erfc}(c\sqrt{\tau}))^n$ and $dv = \exp(-A\tau) \tau^{n/2}$.
 Under the Jeffreys prior $\pi(\tau) \propto \tau$, $dv = \exp(-A\tau) \tau^{(n + 2)/2}$.
-The full plan for a semi-analytical solution here is: integrate one of the parameters out then marginalise over the one one through quadrature (see stretched exponential below).
+The full plan for a semi-analytical solution here is: integrate one of the parameters out then marginalise over the other one through quadrature (see stretched exponential below).
 
 \section{Stretched exponential (Weibull)}
+
 The likelihood for a single point is
 $$ f(x | \lambda, \beta, x_{\min}) = \lambda\beta\exp\left(\lambda x_{\min}^\beta\right) x^{\beta-1} \exp\left(-\lambda x^\beta \right) $$
 The likelihood of a sample $\boldsymbol x$ is

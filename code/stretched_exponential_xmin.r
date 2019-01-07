@@ -42,15 +42,7 @@ stexpo_xmin_cdf <- function(x, beta, lambda, xmin){
 stexpo_xmin_cdf <- Vectorize(stexpo_xmin_cdf)
 ##
 library(reticulate)
-logSumExp <- function(x) log(sum(exp(x - max(x)))) + max(x)
-log_sum_exp <- py_func(logSumExp)
-logDiffExp <- function(x, y){
-  biggest <- x
-  xx1 = x - biggest
-  xx2 = y - biggest
-  ans <- log(exp(xx1) - exp(xx2)) + biggest
-  return(ans)
-} 
+log_sum_exp <- py_func(logSumExp) ## depends on bplaw_aux.r
 log_diff_exp <- py_func(logDiffExp)
 ##
 get_marginal_likelihood_str_expo <- function(x, a1 = 1, b1 = 1, a2 = 2, b2 = 2, xmin = 0){
