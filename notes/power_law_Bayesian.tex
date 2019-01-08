@@ -91,8 +91,8 @@ The problem with this approach is that the induced prior on the actual parameter
 In this situation we have
 \begin{align} 
  \label{eq:truncated_alpha_MaL}
-  & \mathcal{L}( \boldsymbol x |  x_{\min},  l_\alpha, u_\alpha) = \int_{l_\alpha}^{u_\alpha} \frac{1}{(u_\alpha - l_\alpha)} \frac{1}{(\alpha - 1)} \left( \frac{\alpha - 1}{x_{\min} } \right)^N \left(\frac{ \prod_{i= 1}^N x_i}{ x_{\min}^N }\right)^{-\alpha} d\alpha, \\ %TODO: maybe remove this as redundant (just state 
-  &= \frac{\Gamma\left(N, -(l_\alpha - 1)\log(z) \right) - \Gamma\left(N, - (u_\alpha - 1) \log(z) \right) }{(u_\alpha - l_\alpha)\prod_{i= 1}^N x_i\left(-\log(z)\right)^N} , 
+  & \mathcal{L}( \boldsymbol x |  x_{\min},  l_\alpha, u_\alpha) = \int_{l_\alpha}^{u_\alpha} \frac{1}{(u_\alpha - l_\alpha)} \left( \frac{\alpha - 1}{x_{\min} } \right)^N \left(\frac{ \prod_{i= 1}^N x_i}{ x_{\min}^N }\right)^{-\alpha} d\alpha, \\ %TODO: maybe remove this as redundant (just state 
+  &= \frac{\Gamma\left(N + 1, -(l_\alpha - 1)\log(z) \right) - \Gamma\left(N + 1, - (u_\alpha - 1) \log(z) \right) }{(u_\alpha - l_\alpha)\prod_{i= 1}^N x_i\left(-\log(z)\right)^N \log(z)} , 
   \end{align}
 for $ 1 \leq l_\alpha < u_\alpha$ with $z := \frac{x_{\min}^N}{\prod_{i= 1}^N x_i }$, where $\Gamma(s, x)$ is the incomplete Gamma function and $\Gamma(s) = \Gamma(s, 0)$.
 \section{Log-normal}
